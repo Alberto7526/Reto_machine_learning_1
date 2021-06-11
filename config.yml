@@ -1,0 +1,16 @@
+estimator:
+  - name: random-forest-regressor # temporalmente dejé este para tener una referencia
+    params: {}
+
+data:
+  filepath: ./data/train_classification.csv
+
+metrics:
+  - name: mean absolute error # same as above
+    params: {}
+
+export:
+  output_dir: ./models
+
+reports:
+  dir: ./reports
