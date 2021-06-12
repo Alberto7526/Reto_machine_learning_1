@@ -20,10 +20,10 @@ SplitName = te.Literal["train", "test"]
 
 def get_dataset(reader: DatasetReader, splits: t.Iterable[SplitName]):
     df = reader()
-    df = clean_dataset(df)
+    # df = clean_dataset(df)
 
-    y = df["SalePrice"]
-    X = df.drop(columns=["SalePrice", "Id"])
+    y = df["y"]
+    X = df.drop(columns=["y"])
     X = X.astype({k: str for k in get_categorical_variables_values_mapping().keys()})
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=1
@@ -32,52 +32,55 @@ def get_dataset(reader: DatasetReader, splits: t.Iterable[SplitName]):
     return {k: split_mapping[k] for k in splits}
 
 
-def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
-    cleaning_fn = _chain(
-        [
-            _fix_unhandled_nulls,
-        ]
-    )
-    df = cleaning_fn(df)
-    return df
+# def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+#     cleaning_fn = _chain(
+#         [
+#             _fix_unhandled_nulls,
+#         ]
+#     )
+#     df = cleaning_fn(df)
+#     return df
 
 
-def _chain(functions: t.List[t.Callable[[pd.DataFrame], pd.DataFrame]]):
-    def helper(df):
-        for fn in functions:
-            df = fn(df)
-        return df
+# def _chain(functions: t.List[t.Callable[[pd.DataFrame], pd.DataFrame]]):
+#     def helper(df):
+#         for fn in functions:
+#             df = fn(df)
+#         return df
 
-    return helper
+#     return helper
 
-def _fix_unhandled_nulls(df):
-    df.dropna(inplace=True)
-    return df
+# def _fix_unhandled_nulls(df):
+#     df.dropna(inplace=True)
+#     return df
 
 
 def get_categorical_column_names() -> t.List[str]:
-    return (
-        ""
-    ).split(",")
+    return "sex,cp,fbs,restecg,exng,slp,caa,thall".split(",")
 
 
 def get_binary_column_names() -> t.List[str]:
-    return "".split(",")
+    return "sex,fbs,exng".split(",")
 
 
 def get_numeric_column_names() -> t.List[str]:
-    return (
-        ""
-    ).split(",")
+    return "age,trtbps,chol,thalachh,oldpeak".split(",")
 
 
 def get_column_names() -> t.List[str]:
     return (
-        ""
-    ).split(",")
+        "sex,cp,fbs,restecg,exng,slp,caa,thall,"
+        + "age,trtbps,chol,thalachh,oldpeak").split(",")
 
 
 def get_categorical_variables_values_mapping() -> t.Dict[str, t.Sequence[str]]:
     return {
-        
+        "sex": ("1","0"),
+        "cp":("0","1","2","3"),
+        "fbs":("1","0"),
+        "restecg":("0","1","2"),
+        "exng":("1","0"),
+        "slp":("0","1","2"),
+        "caa":("0","1","2","3"),
+        "thall":("0","1","2","3")
     }
