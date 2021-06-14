@@ -1,9 +1,11 @@
 estimator:
-  - name: random-forest-regressor # temporalmente dejé este para tener una referencia
+  - name: average-charges-extractor
+    params: {}
+  - name: average-charges-regressor # temporalmente dejé este para tener una referencia
     params: {}
 
 data:
-  filepath: ./data/train_classification.csv
+  filepath: "./data/train_regression.csv"
 
 metrics:
   - name: mean absolute error # same as above

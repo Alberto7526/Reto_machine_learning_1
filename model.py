@@ -6,7 +6,7 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -33,6 +33,8 @@ def build_estimator(config: EstimatorConfig):
 
 def get_estimator_mapping():
     return {
+        "average-charges-extractor": AverageChargesPerRegionExtractor,
+        "average-charges-regressor": AverageChargesPerRegionRegressor,
         "random-forest-regressor": RandomForestRegressor,
         "linear-regressor": LinearRegression,
         "categorical-encoder": CategoricalEncoder,
@@ -76,3 +78,43 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X):
         return self._column_transformer.transform(X)
 
+
+class AverageChargesPerRegionRegressor(BaseEstimator, RegressorMixin):
+    def fit(self, X, y):
+        """Computes the mode of the price per neighbor on training data."""
+        df = pd.DataFrame({"region": X["region"], "y": y})
+        self.means_ = df.groupby("region").mean().to_dict()["y"]
+        self.global_mean_ = y.mean()
+        return self
+
+    def predict(self, X):
+        """Predicts the mode computed in the fit method."""
+
+        def get_average(x):
+            if x in self.means_:
+                return self.means_[x]
+            else:
+                return self.global_mean_
+
+        y_pred = X["region"].apply(get_average)
+        return y_pred
+
+
+class AverageChargesPerRegionExtractor(BaseEstimator, TransformerMixin):
+    def fit(self, X, y):
+        df = pd.DataFrame({"region": X["region"], "y": y})
+        self.means_ = df.groupby("region").mean().to_dict()["y"]
+        self.global_mean_ = y.mean()
+        return self
+
+    def transform(self, X):
+        X = X.copy()
+
+        def get_average(x):
+            if x in self.means_:
+                return self.means_[x]
+            else:
+                return self.global_mean_
+
+        X["AverageChargeInRegion"] = X["region"].apply(get_average)
+        return X
