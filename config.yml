@@ -1,7 +1,18 @@
 estimator:
   - name: average-charges-extractor
     params: {}
-  - name: average-charges-regressor # temporalmente dejé este para tener una referencia
+  - name: discretizer
+    params:
+      bins_per_column:
+        bmi: 4
+      strategy: quantile
+  - name:  categorical-encoder
+    params:
+      one_hot: true
+      force_dense_array: true
+  - name: standard-scaler
+    params: {}
+  - name: linear-regressor
     params: {}
 
 data:

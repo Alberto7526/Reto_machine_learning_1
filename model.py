@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import StandardScaler,KBinsDiscretizer
 
 import data
 
@@ -35,10 +35,10 @@ def get_estimator_mapping():
     return {
         "average-charges-extractor": AverageChargesPerRegionExtractor,
         "average-charges-regressor": AverageChargesPerRegionRegressor,
-        "random-forest-regressor": RandomForestRegressor,
         "linear-regressor": LinearRegression,
         "categorical-encoder": CategoricalEncoder,
         "standard-scaler": StandardScaler,
+        "discretizer": Discretizer
     }
 
 
@@ -117,4 +117,41 @@ class AverageChargesPerRegionExtractor(BaseEstimator, TransformerMixin):
                 return self.global_mean_
 
         X["AverageChargeInRegion"] = X["region"].apply(get_average)
+        return X
+
+
+class Discretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, *, bins_per_column: t.Mapping[str, int], strategy: str):
+        self.bins_per_column = bins_per_column
+        self.strategy = strategy
+
+    def fit(self, X, y):
+        X = X.copy()
+        self.n_features_in_ = X.shape[1]
+        self.original_column_order_ = X.columns.tolist()
+        self.columns_, n_bins = zip(*self.bins_per_column.items())
+        self.new_column_order_ = self.columns_ + tuple(
+            name
+            for name in self.original_column_order_
+            if name not in self.bins_per_column
+        )
+        self._column_transformer = ColumnTransformer(
+            transformers=[
+                (
+                    "encoder",
+                    KBinsDiscretizer(
+                        n_bins=n_bins, encode="ordinal", strategy=self.strategy
+                    ),
+                    self.columns_,
+                ),
+            ],
+            remainder="passthrough",
+        )
+        self._column_transformer = self._column_transformer.fit(X, y=y)
+        return self
+
+    def transform(self, X):
+        X = pd.DataFrame(
+            self._column_transformer.transform(X), columns=self.new_column_order_
+        )
         return X

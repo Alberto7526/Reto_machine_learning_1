@@ -56,22 +56,24 @@ def get_dataset(reader: DatasetReader, splits: t.Iterable[SplitName]):
 
 
 def get_categorical_column_names() -> t.List[str]:
-    return "sex,exng,caa,cp,fbs,restecg".split(",")
+    return "region".split(",")
 
 
 def get_binary_column_names() -> t.List[str]:
-    return "sex,exng,fbs".split(",")
+    return "sex,smoker".split(",")
 
 
 def get_numeric_column_names() -> t.List[str]:
-    return "age,trtbps,chol,oldpeak,thalachh".split(",")
+    return "age,bmi,children".split(",")
 
 
 def get_column_names() -> t.List[str]:
-    return "age,sex,cp,trtbps,chol,fbs,restecg,thalachh,exng,oldpeak,slp,caa,thall".split(",")
+    return "age,sex,bmi,children,smoker,region".split(",")
 
 
 def get_categorical_variables_values_mapping() -> t.Dict[str, t.Sequence[str]]:
     return {
-        
+        "sex":("female","male"),
+        "smoker":("no","yes"),
+        "region": ("northeast","southwest","northwest","southeast")       
     }
