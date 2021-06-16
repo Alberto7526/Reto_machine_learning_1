@@ -6,12 +6,12 @@ from functools import partial
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, PolynomialFeatures
+from sklearn.preprocessing import StandardScaler,KBinsDiscretizer
 
 import data
 
@@ -33,13 +33,14 @@ def build_estimator(config: EstimatorConfig):
 
 def get_estimator_mapping():
     return {
-        "random-forest-regressor": RandomForestRegressor,
+        "average-charges-extractor": AverageChargesPerRegionExtractor,
+        "average-charges-regressor": AverageChargesPerRegionRegressor,
         "linear-regressor": LinearRegression,
+        "logistic-regressor": LogisticRegression,
         "categorical-encoder": CategoricalEncoder,
         "standard-scaler": StandardScaler,
+        "discretizer": Discretizer,
     }
-
-
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, *, one_hot: bool = False, force_dense_array: bool = False):
         self.one_hot = one_hot
@@ -76,3 +77,80 @@ class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def transform(self, X):
         return self._column_transformer.transform(X)
 
+
+class AverageChargesPerRegionRegressor(BaseEstimator, RegressorMixin):
+    def fit(self, X, y):
+        """Computes the mode of the price per neighbor on training data."""
+        df = pd.DataFrame({"region": X["region"], "y": y})
+        self.means_ = df.groupby("region").mean().to_dict()["y"]
+        self.global_mean_ = y.mean()
+        return self
+
+    def predict(self, X):
+        """Predicts the mode computed in the fit method."""
+
+        def get_average(x):
+            if x in self.means_:
+                return self.means_[x]
+            else:
+                return self.global_mean_
+
+        y_pred = X["region"].apply(get_average)
+        return y_pred
+
+
+class AverageChargesPerRegionExtractor(BaseEstimator, TransformerMixin):
+    def fit(self, X, y):
+        df = pd.DataFrame({"region": X["region"], "y": y})
+        self.means_ = df.groupby("region").mean().to_dict()["y"]
+        self.global_mean_ = y.mean()
+        return self
+
+    def transform(self, X):
+        X = X.copy()
+
+        def get_average(x):
+            if x in self.means_:
+                return self.means_[x]
+            else:
+                return self.global_mean_
+
+        X["AverageChargeInRegion"] = X["region"].apply(get_average)
+        return X
+
+
+class Discretizer(BaseEstimator, TransformerMixin):
+    def __init__(self, *, bins_per_column: t.Mapping[str, int], strategy: str):
+        self.bins_per_column = bins_per_column
+        self.strategy = strategy
+
+    def fit(self, X, y):
+        X = X.copy()
+        self.n_features_in_ = X.shape[1]
+        self.original_column_order_ = X.columns.tolist()
+        self.columns_, n_bins = zip(*self.bins_per_column.items())
+        self.new_column_order_ = self.columns_ + tuple(
+            name
+            for name in self.original_column_order_
+            if name not in self.bins_per_column
+        )
+        self._column_transformer = ColumnTransformer(
+            transformers=[
+                (
+                    "encoder",
+                    KBinsDiscretizer(
+                        n_bins=n_bins, encode="ordinal", strategy=self.strategy
+                    ),
+                    self.columns_,
+                ),
+            ],
+            remainder="passthrough",
+        )
+        self._column_transformer = self._column_transformer.fit(X, y=y)
+        return self
+
+    def transform(self, X):
+        X = pd.DataFrame(
+            self._column_transformer.transform(X), columns=self.new_column_order_
+        )
+        return X

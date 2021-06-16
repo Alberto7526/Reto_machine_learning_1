@@ -1,9 +1,22 @@
 estimator:
-  - name: random-forest-regressor # temporalmente dejé este para tener una referencia
+  - name: average-charges-extractor
+    params: {}
+  - name: discretizer
+    params:
+      bins_per_column:
+        bmi: 2
+      strategy: kmeans
+  - name: categorical-encoder
+    params:
+      force_dense_array: true
+      one_hot: true
+  - name: standard-scaler
+    params: {}
+  - name: linear-regressor
     params: {}
 
 data:
-  filepath: ./data/train_classification.csv
+  filepath: "./data/train_regression.csv"
 
 metrics:
   - name: mean absolute error # same as above
