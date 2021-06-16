@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, PolynomialFeatures
 from sklearn.preprocessing import StandardScaler,KBinsDiscretizer
 
 import data
@@ -36,12 +36,11 @@ def get_estimator_mapping():
         "average-charges-extractor": AverageChargesPerRegionExtractor,
         "average-charges-regressor": AverageChargesPerRegionRegressor,
         "linear-regressor": LinearRegression,
+        "logistic-regressor": LogisticRegression,
         "categorical-encoder": CategoricalEncoder,
         "standard-scaler": StandardScaler,
-        "discretizer": Discretizer
+        "discretizer": Discretizer,
     }
-
-
 class CategoricalEncoder(BaseEstimator, TransformerMixin):
     def __init__(self, *, one_hot: bool = False, force_dense_array: bool = False):
         self.one_hot = one_hot
