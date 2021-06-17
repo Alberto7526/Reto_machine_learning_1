@@ -32,27 +32,27 @@ def get_dataset(reader: DatasetReader, splits: t.Iterable[SplitName]):
     return {k: split_mapping[k] for k in splits}
 
 
-# def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
-#     cleaning_fn = _chain(
-#         [
-#             _fix_unhandled_nulls,
-#         ]
-#     )
-#     df = cleaning_fn(df)
-#     return df
+def clean_dataset(df: pd.DataFrame) -> pd.DataFrame:
+    cleaning_fn = _chain(
+        [
+            _fix_unhandled_nulls,
+        ]
+    )
+    df = cleaning_fn(df)
+    return df
 
 
-# def _chain(functions: t.List[t.Callable[[pd.DataFrame], pd.DataFrame]]):
-#     def helper(df):
-#         for fn in functions:
-#             df = fn(df)
-#         return df
+def _chain(functions: t.List[t.Callable[[pd.DataFrame], pd.DataFrame]]):
+    def helper(df):
+        for fn in functions:
+            df = fn(df)
+        return df
 
-#     return helper
+    return helper
 
-# def _fix_unhandled_nulls(df):
-#     df.dropna(inplace=True)
-#     return df
+def _fix_unhandled_nulls(df):
+    df.dropna(inplace=True)
+    return df
 
 
 def get_categorical_column_names() -> t.List[str]:
@@ -77,3 +77,31 @@ def get_categorical_variables_values_mapping() -> t.Dict[str, t.Sequence[str]]:
         "smoker":("no","yes"),
         "region": ("northeast","southwest","northwest","southeast")       
     }
+
+# def get_categorical_column_names() -> t.List[str]:
+#     return 'cp,restecg,slp,caa,thall'.split(",")
+
+
+# def get_binary_column_names() -> t.List[str]:
+#     return "sex,exng,fbs".split(",")
+
+
+# def get_numeric_column_names() -> t.List[str]:
+#     return 'age,trtbps,chol,thalachh,oldpeak'.split(",")
+
+
+# def get_column_names() -> t.List[str]:
+#     return "cp,restecg,slp,caa,thall,sex,exng,fbs,age,trtbps,chol,thalachh,oldpeak".split(",")
+
+
+# def get_categorical_variables_values_mapping() -> t.Dict[str, t.Sequence[str]]:
+#     return {
+#         "sex":("1","0"),
+#         "exng":("1","0"),
+#         "fbs": ("1","0"),
+#         "cp": ("1","0","2","3"),
+#         "restecg":("0","1","2"),
+#         "slp":("0","1","2"),
+#         "caa":("0","1","2","3"),
+#         "thall":("0","1","2","3")
+#     }

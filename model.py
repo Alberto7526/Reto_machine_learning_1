@@ -10,8 +10,9 @@ from sklearn.base import BaseEstimator, TransformerMixin, RegressorMixin
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, PolynomialFeatures
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.preprocessing import StandardScaler,KBinsDiscretizer
+from sklearn.ensemble import BaggingRegressor
 
 import data
 
@@ -39,6 +40,7 @@ def get_estimator_mapping():
         "logistic-regressor": LogisticRegression,
         "categorical-encoder": CategoricalEncoder,
         "standard-scaler": StandardScaler,
+        "bagging": BaggingRegressor,
         "discretizer": Discretizer,
     }
 class CategoricalEncoder(BaseEstimator, TransformerMixin):

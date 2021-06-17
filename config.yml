@@ -12,8 +12,9 @@ estimator:
       one_hot: true
   - name: standard-scaler
     params: {}
-  - name: linear-regressor
+  - name: bagging
     params: {}
+
 
 data:
   filepath: "./data/train_regression.csv"
